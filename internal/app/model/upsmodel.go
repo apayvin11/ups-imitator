@@ -13,45 +13,14 @@ type Alarms struct {
 }
 
 type UpsParams struct {
-	InputAcVoltage  float32          `json:"input_ac_voltage" example:"220"`
-	InputAcCurrent  float32          `json:"input_ac_current" example:"5"`
-	BatGroupVoltage float32          `json:"bat_group_voltage" example:"48"`
-	BatGroupCurrent float32          `json:"bat_group_current" example:"20"`
-	BatteryCapacity float32          `json:"battery_capacity" example:"20"`
-	SOC             float32          `json:"soc" example:"100"` // state of charge (percent)
-	Batteries       [4]BatteryParams `json:"batteries"`
-	Alarms Alarms
-}
-
-func DefaultUpsParams() UpsParams {
-	return UpsParams{
-		InputAcVoltage:  220,
-		InputAcCurrent:  5,
-		BatGroupVoltage: 54,
-		BatGroupCurrent: 0,
-		BatteryCapacity: 50,
-		SOC:             100,
-		Batteries: [4]BatteryParams{
-			{
-				Voltage: 13.5,
-				Temp:    24,
-				Resist:  5,
-			},
-			{
-				Voltage: 13.5,
-				Temp:    24,
-				Resist:  5,
-			},
-			{
-				Voltage: 13.5,
-				Temp:    24,
-				Resist:  5,
-			},
-			{
-				Voltage: 13.5,
-				Temp:    24,
-				Resist:  5,
-			},
-		},
-	}
+	InputAcVoltage       float32          `json:"input_ac_voltage" example:"220"`          // V
+	InputAcCurrent       float32          `json:"input_ac_current" example:"5"`            // Amp
+	BatGroupVoltage      float32          `json:"bat_group_voltage" example:"48"`          // V
+	BatGroupCurrent      float32          `json:"bat_group_current" example:"0"`           // Amp
+	LoadCurrent          float32          `json:"load_current" example:"20"`               // Amp
+	BatCapacity          float32          `json:"battery_capacity" example:"50"`           // Ah
+	RemainingBatCapacity float32          `json:"remaining_battery_capacity" example:"50"` // Ah
+	SOC                  float32          `json:"soc" example:"100"`                       // state of charge (percent)
+	Batteries            [4]BatteryParams `json:"batteries"`
+	Alarms               Alarms
 }

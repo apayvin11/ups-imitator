@@ -25,6 +25,6 @@ func main() {
 		clients = append(clients, modbus.NewClient(handler))
 	}
 
-	imitator := imitator.New(clients, conf.UpsSyncInterval)
+	imitator := imitator.New(clients, conf)
 	imitator.Start()
 }
