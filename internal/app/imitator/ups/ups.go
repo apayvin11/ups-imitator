@@ -167,7 +167,7 @@ func (u *Ups) sendParams(params *model.UpsParams) error {
 			return fmt.Errorf("binary.Write failed: %v", err)
 		}
 
-		buf.Write(make([]byte, 4)) // skip empty registers
+		buf.Write(make([]byte, 16)) // skip empty registers
 
 		for _, battery := range params.Batteries {
 			if err := binary.Write(&buf, binary.BigEndian, battery.Voltage); err != nil {
@@ -182,7 +182,7 @@ func (u *Ups) sendParams(params *model.UpsParams) error {
 				return fmt.Errorf("binary.Write failed: %v", err)
 			}
 
-			buf.Write(make([]byte, 8)) // skip empty registers
+			buf.Write(make([]byte, 20)) // skip empty registers
 		}
 
 		res := buf.Bytes()
