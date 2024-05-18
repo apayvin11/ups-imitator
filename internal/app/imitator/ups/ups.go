@@ -121,7 +121,7 @@ func (u *Ups) recalculateParams() {
 
 		if u.params.RemainingBatCapacity > u.params.BatCapacity {
 			u.params.RemainingBatCapacity = u.params.BatCapacity
-			u.params.SOC = 100
+			u.params.SOC = 1
 			u.cycleDoneTime = time.Now()
 			u.params.BatGroupCurrent = 0
 
@@ -239,7 +239,7 @@ func (u *Ups) setDefaultUpsParams() {
 		LoadCurrent:          u.conf.LoadPower / u.conf.MaxBatGroupVoltage,
 		BatCapacity:          u.conf.DefaultBatCapacity,
 		RemainingBatCapacity: u.conf.DefaultBatCapacity,
-		SOC:                  100,
+		SOC:                  1,
 		Batteries: [4]model.BatteryParams{
 			{
 				Voltage: 13.5,
@@ -294,10 +294,10 @@ func (u *Ups) recalcInputAcCurrent() {
 }
 
 func (u *Ups) recalcChargingCurrent() {
-	if u.params.SOC < 80 {
+	if u.params.SOC < 0.8 {
 		u.params.BatGroupCurrent = u.conf.ChargeCurrentLimit
 	} else {
-		cf := 1 - 4*((u.params.SOC-80)/100)
+		cf := 1 - 4*(u.params.SOC-0.8)
 		u.params.BatGroupCurrent = u.conf.ChargeCurrentLimit * cf
 	}
 }

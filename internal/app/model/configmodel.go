@@ -37,8 +37,7 @@ func (conf *Config) validate() error {
 		validation.Field(&conf.LoadPower, validation.Required, validation.Min(float32(100)), validation.Max(float32(200000))),
 		validation.Field(&conf.DefaultBatCapacity, validation.Required, validation.Min(float32(10)), validation.Max(float32(1000))),
 		validation.Field(&conf.ChargeCurrentLimit, validation.Required, validation.Min(float32(10)), validation.Max(float32(500))),
-		validation.Field(&conf.LowSocTriggerAlarm, validation.Required, validation.Max(float32(50))),
-
+		validation.Field(&conf.LowSocTriggerAlarm, validation.Required, validation.Max(float32(0.5))),
 	)
 }
 

@@ -1,8 +1,8 @@
-ups_addresses = ["localhost:1502"]
+ups_addresses = ["127.0.0.1:1502"]
 rest_api_bind_addr = ":8080"
 ups_sync_interval = 30 # sec
 
-cycle_change_timeout = 300 # sec
+cycle_change_timeout = 3600 # sec
 
 default_input_ac_voltage    = 220   # V
 max_bat_group_voltage       = 54    # V
@@ -10,4 +10,4 @@ min_bat_group_voltage       = 42    # V
 load_power                  = 1000  # W
 default_bat_capacity        = 50    # Ah
 charge_current_limit        = 20    # A
-low_soc_trigger_alarm       = 10    # percent
+low_soc_trigger_alarm       = 0.1   # from 0 to 1, 1: 100%
