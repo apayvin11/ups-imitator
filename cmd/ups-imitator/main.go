@@ -3,13 +3,22 @@ package main
 import (
 	"log"
 
+	"github.com/alex11prog/ups-imitator/internal/apiserver"
 	"github.com/alex11prog/ups-imitator/internal/app/imitator"
 	"github.com/alex11prog/ups-imitator/internal/app/model"
 	"github.com/goburrow/modbus"
 )
 
-const confPath = "conf/config.toml"
+const (
+	confPath        = "conf/config.toml"
+)
 
+//	@title			UPS-имитатор - OpenAPI спецификация
+//	@version		v1.0.0
+//	@description	REST API для UPS имитатора
+
+// host		localhost:8080
+// @BasePath	/
 func main() {
 	conf := model.NewConfig(confPath)
 
@@ -27,4 +36,8 @@ func main() {
 
 	imitator := imitator.New(clients, conf)
 	imitator.Start()
+
+	if err := apiserver.StartServer(conf.RestApiBindAddr, imitator); err != nil {
+		log.Fatal("apiserver.StartServer error! ", err)
+	}
 }

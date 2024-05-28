@@ -1,6 +1,7 @@
 package imitator
 
 import (
+	"fmt"
 	"sync/atomic"
 	"time"
 
@@ -13,7 +14,7 @@ type Imitator struct {
 	conf          *model.Config
 	upsSyncTicker *time.Ticker
 	mode          atomic.Bool // true - auto, false manual
-	ups_          []*ups.Ups
+	upsSlice      []*ups.Ups
 }
 
 func New(clients []modbus.Client, conf *model.Config) *Imitator {
@@ -22,18 +23,21 @@ func New(clients []modbus.Client, conf *model.Config) *Imitator {
 		upsSyncTicker: time.NewTicker(conf.UpsSyncInterval),
 	}
 	res.mode.Store(true)
-	for _, client := range clients {
-		res.ups_ = append(res.ups_, ups.New(client, conf))
+	res.upsSlice = make([]*ups.Ups, len(clients))
+	for i, client := range clients {
+		res.upsSlice[i] = ups.New(client, conf)
 	}
 	return res
 }
 
 func (im *Imitator) Start() {
-	for range im.upsSyncTicker.C {
-		for _, ups := range im.ups_ {
-			ups.CountAndSend()
+	go func() {
+		for range im.upsSyncTicker.C {
+			for _, ups := range im.upsSlice {
+				ups.CountAndSend()
+			}
 		}
-	}
+	}()
 }
 
 func (im *Imitator) GetMode() bool {
@@ -44,7 +48,7 @@ func (im *Imitator) SetMode(val bool) {
 	old := im.mode.Swap(val)
 	if old != val {
 		if val {
-			for _, ups := range im.ups_ {
+			for _, ups := range im.upsSlice {
 				ups.Reset()
 			}
 			im.upsSyncTicker.Reset(im.conf.UpsSyncInterval)
@@ -55,9 +59,25 @@ func (im *Imitator) SetMode(val bool) {
 }
 
 func (im *Imitator) GetUpsParams() []*model.UpsParams {
-	var res []*model.UpsParams
-	for _, ups := range im.ups_ {
-		res = append(res, ups.GetParams())
+	res := make([]*model.UpsParams, len(im.upsSlice))
+	for i, ups := range im.upsSlice {
+		res[i] = ups.GetParams()
 	}
 	return res
+}
+
+func (im *Imitator) UpdateUps(ups_id int, form *model.UpsParamsUpdateForm) error {
+	if l := len(im.upsSlice); ups_id >= l {
+		return fmt.Errorf("ups_id out of range: %d, expected less %d", ups_id, l)
+	}
+
+	im.upsSlice[ups_id].UpdateParams(form)
+	return nil
+}
+
+func (im *Imitator) UpdateUpsBattery(ups_id int, bat_id int, form *model.BatteryParamsUpdateForm) error {
+	if l := len(im.upsSlice); ups_id >= l {
+		return fmt.Errorf("ups_id out of range: %d, expected less %d", ups_id, l)
+	}
+	return im.upsSlice[ups_id].UpdateBatteryParams(bat_id, form)
 }

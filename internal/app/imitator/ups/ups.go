@@ -210,6 +210,22 @@ func (u *Ups) GetParams() *model.UpsParams {
 	return &cp
 }
 
+func (u *Ups) UpdateParams(params *model.UpsParamsUpdateForm) {
+	u.mu.Lock()
+	u.params.UpdateParams(params)
+	u.mu.Unlock()
+}
+
+func (u *Ups) UpdateBatteryParams(bat_id int, batParams *model.BatteryParamsUpdateForm) error {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	if l := len(u.params.Batteries); bat_id >= l {
+		return fmt.Errorf("bat_id out of range: %d, expected less %d", bat_id, l)
+	}
+	u.params.Batteries[bat_id].Update(batParams)
+	return nil
+}
+
 func (u *Ups) getParamsWithSimulatedMeasErr() *model.UpsParams {
 	res := &model.UpsParams{
 		InputAcVoltage:       utils.SimulateMeasErr(0.02, u.params.InputAcVoltage),

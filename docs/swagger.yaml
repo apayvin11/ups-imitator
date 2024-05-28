@@ -1,0 +1,256 @@
+basePath: /
+definitions:
+  apiserver.errorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  apiserver.mode:
+    properties:
+      mode:
+        example: false
+        type: boolean
+    required:
+    - mode
+    type: object
+  apiserver.statusBody:
+    properties:
+      status:
+        type: string
+    type: object
+  model.Alarms:
+    properties:
+      low_battery:
+        example: false
+        type: boolean
+      overload:
+        example: false
+        type: boolean
+      upc_in_battery_mode:
+        example: false
+        type: boolean
+    type: object
+  model.AlarmsUpdateForm:
+    properties:
+      low_battery:
+        example: false
+        type: boolean
+      overload:
+        example: false
+        type: boolean
+      upc_in_battery_mode:
+        example: false
+        type: boolean
+    type: object
+  model.BatteryParams:
+    properties:
+      resist:
+        example: 5
+        type: number
+      temp:
+        example: 24
+        type: number
+      voltage:
+        example: 12
+        type: number
+    type: object
+  model.BatteryParamsUpdateForm:
+    properties:
+      resist:
+        example: 5
+        type: number
+      temp:
+        example: 24
+        type: number
+      voltage:
+        example: 12
+        type: number
+    type: object
+  model.UpsParams:
+    properties:
+      alarms:
+        $ref: '#/definitions/model.Alarms'
+      bat_group_current:
+        description: Amp
+        example: 0
+        type: number
+      bat_group_voltage:
+        description: V
+        example: 48
+        type: number
+      batteries:
+        items:
+          $ref: '#/definitions/model.BatteryParams'
+        type: array
+      battery_capacity:
+        description: Ah
+        example: 50
+        type: number
+      input_ac_current:
+        description: Amp
+        example: 5
+        type: number
+      input_ac_voltage:
+        description: V
+        example: 220
+        type: number
+      load_current:
+        description: Amp
+        example: 20
+        type: number
+      remaining_battery_capacity:
+        description: Ah
+        example: 50
+        type: number
+      soc:
+        description: state of charge (percent)
+        example: 100
+        type: number
+    type: object
+  model.UpsParamsUpdateForm:
+    properties:
+      alarms:
+        $ref: '#/definitions/model.AlarmsUpdateForm'
+      bat_group_current:
+        description: Amp
+        example: 0
+        type: number
+      bat_group_voltage:
+        description: V
+        example: 48
+        type: number
+      input_ac_current:
+        description: Amp
+        example: 5
+        type: number
+      input_ac_voltage:
+        description: V
+        example: 220
+        type: number
+    type: object
+info:
+  contact: {}
+  description: REST API для UPS имитатора
+  title: UPS-имитатор - OpenAPI спецификация
+  version: v1.0.0
+paths:
+  /imitator/mode:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiserver.mode'
+      summary: method returns imitator mode
+      tags:
+      - Imitator
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: mode
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/apiserver.mode'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiserver.statusBody'
+      summary: method updates imitator mode
+      tags:
+      - Imitator
+  /imitator/ups:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.UpsParams'
+            type: array
+      summary: method returns all ups
+      tags:
+      - Imitator
+  /imitator/ups/{ups_id}:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: params
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpsParamsUpdateForm'
+      - description: UPS id
+        in: path
+        name: ups_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiserver.statusBody'
+        "400":
+          description: invalid payload
+          schema:
+            $ref: '#/definitions/apiserver.errorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/apiserver.errorResponse'
+      summary: method updates ups params
+      tags:
+      - Imitator
+  /imitator/ups/{ups_id}/battery/{bat_id}:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: params
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.BatteryParamsUpdateForm'
+      - description: UPS id
+        in: path
+        name: ups_id
+        required: true
+        type: integer
+      - description: Battery id
+        in: path
+        name: bat_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiserver.statusBody'
+        "400":
+          description: invalid payload
+          schema:
+            $ref: '#/definitions/apiserver.errorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/apiserver.errorResponse'
+      summary: method updates ups battery params
+      tags:
+      - Imitator
+swagger: "2.0"

@@ -1,0 +1,375 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "REST API для UPS имитатора",
+        "title": "UPS-имитатор - OpenAPI спецификация",
+        "contact": {},
+        "version": "v1.0.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/imitator/mode": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Imitator"
+                ],
+                "summary": "method returns imitator mode",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.mode"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Imitator"
+                ],
+                "summary": "method updates imitator mode",
+                "parameters": [
+                    {
+                        "description": "mode",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.mode"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.statusBody"
+                        }
+                    }
+                }
+            }
+        },
+        "/imitator/ups": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Imitator"
+                ],
+                "summary": "method returns all ups",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.UpsParams"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/imitator/ups/{ups_id}": {
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Imitator"
+                ],
+                "summary": "method updates ups params",
+                "parameters": [
+                    {
+                        "description": "params",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpsParamsUpdateForm"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "UPS id",
+                        "name": "ups_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.statusBody"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.errorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/imitator/ups/{ups_id}/battery/{bat_id}": {
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Imitator"
+                ],
+                "summary": "method updates ups battery params",
+                "parameters": [
+                    {
+                        "description": "params",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.BatteryParamsUpdateForm"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "UPS id",
+                        "name": "ups_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Battery id",
+                        "name": "bat_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.statusBody"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.errorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.errorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "apiserver.errorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "apiserver.mode": {
+            "type": "object",
+            "required": [
+                "mode"
+            ],
+            "properties": {
+                "mode": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "apiserver.statusBody": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Alarms": {
+            "type": "object",
+            "properties": {
+                "low_battery": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "overload": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "upc_in_battery_mode": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "model.AlarmsUpdateForm": {
+            "type": "object",
+            "properties": {
+                "low_battery": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "overload": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "upc_in_battery_mode": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "model.BatteryParams": {
+            "type": "object",
+            "properties": {
+                "resist": {
+                    "type": "number",
+                    "example": 5
+                },
+                "temp": {
+                    "type": "number",
+                    "example": 24
+                },
+                "voltage": {
+                    "type": "number",
+                    "example": 12
+                }
+            }
+        },
+        "model.BatteryParamsUpdateForm": {
+            "type": "object",
+            "properties": {
+                "resist": {
+                    "type": "number",
+                    "example": 5
+                },
+                "temp": {
+                    "type": "number",
+                    "example": 24
+                },
+                "voltage": {
+                    "type": "number",
+                    "example": 12
+                }
+            }
+        },
+        "model.UpsParams": {
+            "type": "object",
+            "properties": {
+                "alarms": {
+                    "$ref": "#/definitions/model.Alarms"
+                },
+                "bat_group_current": {
+                    "description": "Amp",
+                    "type": "number",
+                    "example": 0
+                },
+                "bat_group_voltage": {
+                    "description": "V",
+                    "type": "number",
+                    "example": 48
+                },
+                "batteries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.BatteryParams"
+                    }
+                },
+                "battery_capacity": {
+                    "description": "Ah",
+                    "type": "number",
+                    "example": 50
+                },
+                "input_ac_current": {
+                    "description": "Amp",
+                    "type": "number",
+                    "example": 5
+                },
+                "input_ac_voltage": {
+                    "description": "V",
+                    "type": "number",
+                    "example": 220
+                },
+                "load_current": {
+                    "description": "Amp",
+                    "type": "number",
+                    "example": 20
+                },
+                "remaining_battery_capacity": {
+                    "description": "Ah",
+                    "type": "number",
+                    "example": 50
+                },
+                "soc": {
+                    "description": "state of charge (percent)",
+                    "type": "number",
+                    "example": 100
+                }
+            }
+        },
+        "model.UpsParamsUpdateForm": {
+            "type": "object",
+            "properties": {
+                "alarms": {
+                    "$ref": "#/definitions/model.AlarmsUpdateForm"
+                },
+                "bat_group_current": {
+                    "description": "Amp",
+                    "type": "number",
+                    "example": 0
+                },
+                "bat_group_voltage": {
+                    "description": "V",
+                    "type": "number",
+                    "example": 48
+                },
+                "input_ac_current": {
+                    "description": "Amp",
+                    "type": "number",
+                    "example": 5
+                },
+                "input_ac_voltage": {
+                    "description": "V",
+                    "type": "number",
+                    "example": 220
+                }
+            }
+        }
+    }
+}
