@@ -28,7 +28,7 @@ func TestServer_handlerGetMode(t *testing.T) {
 	})
 }
 
-func TestServer_handlerPutMode(t *testing.T) {
+func TestServer_handlerUpdateMode(t *testing.T) {
 	imitator := imitator.New(nil, model.TestConfig(t))
 	s := newServer(imitator)
 	testCases := []struct {
@@ -67,4 +67,20 @@ func TestServer_handlerPutMode(t *testing.T) {
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
 	}
+}
+
+func TestServer_handlerGetAllUps(t *testing.T) {
+	imitator := imitator.New(nil, model.TestConfig(t))
+	s := newServer(imitator)
+	testCase := struct {
+		name         string
+		uri          string
+		expectedCode int
+	}{"valid", "/imitator/ups", http.StatusOK}
+	t.Run(testCase.name, func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, testCase.uri, nil)
+		s.router.ServeHTTP(rec, req)
+		assert.Equal(t, testCase.expectedCode, rec.Code)
+	})
 }

@@ -44,6 +44,7 @@ func New(client modbus.Client, conf *model.Config) *Ups {
 	return u
 }
 
+// Reset sets the default value for all params
 func (u *Ups) Reset() {
 	u.mu.Lock()
 	u.state = chargedState
@@ -66,6 +67,7 @@ func (u *Ups) setState(s chargeState) {
 	u.state = s
 }
 
+// recalculateParams recalculates parameters depending on the ups state
 func (u *Ups) recalculateParams() {
 	switch u.state {
 	case chargedState:
@@ -289,6 +291,7 @@ func (u *Ups) recalcSoc() {
 	u.params.SOC = u.params.RemainingBatCapacity / u.params.BatCapacity
 }
 
+// recalcBatGroupVoltage recalculates BatGroupVoltage depending on battery current and SOC (state of charge)
 func (u *Ups) recalcBatGroupVoltage() {
 	if u.params.BatGroupCurrent < 0 { // discharge
 		u.params.BatGroupVoltage = u.conf.MinBatGroupVoltage + u.params.SOC*(u.conf.MaxBatGroupVoltage-u.conf.MinBatGroupVoltage)

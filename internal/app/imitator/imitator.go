@@ -75,6 +75,8 @@ func (im *Imitator) UpdateUps(ups_id int, form *model.UpsParamsUpdateForm) error
 	return nil
 }
 
+// UpdateUpsBattery updates ups battery
+// ups_id - ups index in slice, bat_id - battery index in battery array
 func (im *Imitator) UpdateUpsBattery(ups_id int, bat_id int, form *model.BatteryParamsUpdateForm) error {
 	if l := len(im.upsSlice); ups_id >= l {
 		return fmt.Errorf("ups_id out of range: %d, expected less %d", ups_id, l)

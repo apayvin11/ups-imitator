@@ -9,6 +9,7 @@ func Bool2byte(val bool) byte {
 	return 0
 }
 
+// SimulateMeasErr simulates measure error
 // errDev - err deviation. for example 0.1 (percent)
 func SimulateMeasErr(errDev, srcVal float32) float32 {
 	measErrCoef := rand.Float32() * 2 - 1 // from - 1 to 1
