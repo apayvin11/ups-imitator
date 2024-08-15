@@ -1,17 +1,10 @@
 package apiserver
 
 import (
-	"io"
-	"os"
-
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
-
 	_ "github.com/alex11prog/ups-imitator/docs"
-	"github.com/alex11prog/ups-imitator/internal/app/imitator"
-	"github.com/gin-gonic/gin"
 )
 
+/*
 type server struct {
 	router   *gin.Engine
 	imitator *imitator.Imitator
@@ -58,3 +51,4 @@ type statusBody struct {
 type errorResponse struct {
 	Error string `json:"error"`
 }
+*/

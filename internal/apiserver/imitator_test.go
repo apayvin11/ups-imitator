@@ -1,17 +1,6 @@
 package apiserver
 
-import (
-	"bytes"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
-	"github.com/alex11prog/ups-imitator/internal/app/imitator"
-	"github.com/alex11prog/ups-imitator/internal/app/model"
-	"github.com/stretchr/testify/assert"
-)
-
+/*
 func TestServer_handlerGetMode(t *testing.T) {
 	imitator := imitator.New(nil, model.TestConfig(t))
 	s := newServer(imitator)
@@ -83,4 +72,4 @@ func TestServer_handlerGetAllUps(t *testing.T) {
 		s.router.ServeHTTP(rec, req)
 		assert.Equal(t, testCase.expectedCode, rec.Code)
 	})
-}
+} */

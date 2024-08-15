@@ -1,8 +1,6 @@
 package ups
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"log"
 	"sync"
@@ -10,7 +8,6 @@ import (
 
 	"github.com/alex11prog/ups-imitator/internal/app/model"
 	"github.com/alex11prog/ups-imitator/internal/app/utils"
-	"github.com/goburrow/modbus"
 )
 
 type chargeState uint8
@@ -23,8 +20,7 @@ const (
 )
 
 type Ups struct {
-	client modbus.Client
-	conf   *model.Config
+	conf *model.Config
 
 	mu             sync.Mutex
 	state          chargeState
@@ -33,9 +29,8 @@ type Ups struct {
 	params         model.UpsParams
 }
 
-func New(client modbus.Client, conf *model.Config) *Ups {
+func New(conf *model.Config) *Ups {
 	u := &Ups{
-		client:         client,
 		conf:           conf,
 		lastUpdateTime: time.Now(),
 		cycleDoneTime:  time.Now(),
@@ -54,21 +49,9 @@ func (u *Ups) Reset() {
 	u.mu.Unlock()
 }
 
-// CountAndSend recalculates and sends new values ​​via modbus to UPS
-func (u *Ups) CountAndSend() error {
+// RecalculateParams recalculates parameters depending on the ups state
+func (u *Ups) RecalculateParams() {
 	u.mu.Lock()
-	defer u.mu.Unlock()
-	u.recalculateParams()
-	return u.sendParams(u.getParamsWithSimulatedMeasErr())
-}
-
-func (u *Ups) setState(s chargeState) {
-	log.Printf("\nnew state: %v\n\n", s)
-	u.state = s
-}
-
-// recalculateParams recalculates parameters depending on the ups state
-func (u *Ups) recalculateParams() {
 	switch u.state {
 	case chargedState:
 		if time.Since(u.cycleDoneTime) > u.conf.CycleChangeTimeout {
@@ -139,97 +122,19 @@ func (u *Ups) recalculateParams() {
 	}
 	u.recalcBatValtages()
 	u.lastUpdateTime = time.Now()
-}
-
-// sendParams sends new values ​​via modbus to UPS
-func (u *Ups) sendParams(params *model.UpsParams) error {
-	log.Printf("InputAcVoltage: %v\n", params.InputAcVoltage)
-	log.Printf("InputAcCurrent: %v\n", params.InputAcCurrent)
-	log.Printf("BatGroupVoltage: %v\n", params.BatGroupVoltage)
-	log.Printf("BatGroupCurrent: %v\n", params.BatGroupCurrent)
-	log.Printf("LoadCurrent: %v\n", params.LoadCurrent)
-	log.Printf("RemainingBatCapacity: %v\n", params.RemainingBatCapacity)
-	log.Printf("SOC: %v\n\n", params.SOC)
-	{ // holding registers
-		var buf bytes.Buffer
-
-		if err := binary.Write(&buf, binary.BigEndian, params.InputAcVoltage); err != nil {
-			return fmt.Errorf("binary.Write failed: %v", err)
-		}
-
-		if err := binary.Write(&buf, binary.BigEndian, params.InputAcCurrent); err != nil {
-			return fmt.Errorf("binary.Write failed: %v", err)
-		}
-
-		if err := binary.Write(&buf, binary.BigEndian, params.BatGroupVoltage); err != nil {
-			return fmt.Errorf("binary.Write failed: %v", err)
-		}
-
-		if err := binary.Write(&buf, binary.BigEndian, params.BatGroupCurrent); err != nil {
-			return fmt.Errorf("binary.Write failed: %v", err)
-		}
-
-		buf.Write(make([]byte, 16)) // skip empty registers
-
-		for _, battery := range params.Batteries {
-			if err := binary.Write(&buf, binary.BigEndian, battery.Voltage); err != nil {
-				return fmt.Errorf("binary.Write failed: %v", err)
-			}
-
-			if err := binary.Write(&buf, binary.BigEndian, battery.Temp); err != nil {
-				return fmt.Errorf("binary.Write failed: %v", err)
-			}
-
-			if err := binary.Write(&buf, binary.BigEndian, battery.Resist); err != nil {
-				return fmt.Errorf("binary.Write failed: %v", err)
-			}
-
-			buf.Write(make([]byte, 20)) // skip empty registers
-		}
-
-		res := buf.Bytes()
-		if _, err := u.client.WriteMultipleRegisters(regInputAcVoltage, uint16(len(res)/2), res); err != nil {
-			return err
-		}
-	}
-	{ // coils
-		var res byte
-		res |= utils.Bool2byte(params.Alarms.UpcInBatteryMode)
-		res |= utils.Bool2byte(params.Alarms.LowBattery) << 1
-		res |= utils.Bool2byte(params.Alarms.Overload) << 2
-		if _, err := u.client.WriteMultipleCoils(regAlarmUpcInBatteryMode, 3, []byte{res}); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// GetParams return params of all ups
-func (u *Ups) GetParams() *model.UpsParams {
-	u.mu.Lock()
-	cp := u.params
-	u.mu.Unlock()
-	return &cp
-}
-
-func (u *Ups) UpdateParams(params *model.UpsParamsUpdateForm) {
-	u.mu.Lock()
-	u.params.UpdateParams(params)
 	u.mu.Unlock()
 }
 
-func (u *Ups) UpdateBatteryParams(bat_id int, batParams *model.BatteryParamsUpdateForm) error {
+func (u *Ups) GetParams() (params model.UpsParams) {
 	u.mu.Lock()
-	defer u.mu.Unlock()
-	if l := len(u.params.Batteries); bat_id >= l {
-		return fmt.Errorf("bat_id out of range: %d, expected less %d", bat_id, l)
-	}
-	u.params.Batteries[bat_id].Update(batParams)
-	return nil
+	params = u.params
+	u.mu.Unlock()
+	return
 }
 
-func (u *Ups) getParamsWithSimulatedMeasErr() *model.UpsParams {
-	res := &model.UpsParams{
+func (u *Ups) GetParamsWithSimulatedMeasErr() (params model.UpsParams) {
+	u.mu.Lock()
+	params = model.UpsParams{
 		InputAcVoltage:       utils.SimulateMeasErr(0.02, u.params.InputAcVoltage),
 		InputAcCurrent:       utils.SimulateMeasErr(0.02, u.params.InputAcCurrent),
 		BatGroupVoltage:      utils.SimulateMeasErr(0.02, u.params.BatGroupVoltage),
@@ -241,11 +146,34 @@ func (u *Ups) getParamsWithSimulatedMeasErr() *model.UpsParams {
 		Alarms:               u.params.Alarms,
 	}
 	for i, bat := range u.params.Batteries {
-		res.Batteries[i].Voltage = utils.SimulateMeasErr(0.04, bat.Voltage)
-		res.Batteries[i].Temp = utils.SimulateMeasErr(0.04, bat.Temp)
-		res.Batteries[i].Resist = utils.SimulateMeasErr(0.04, bat.Resist)
+		params.Batteries[i].Voltage = utils.SimulateMeasErr(0.04, bat.Voltage)
+		params.Batteries[i].Temp = utils.SimulateMeasErr(0.04, bat.Temp)
+		params.Batteries[i].Resist = utils.SimulateMeasErr(0.04, bat.Resist)
 	}
-	return res
+	u.mu.Unlock()
+	return
+}
+
+func (u *Ups) UpdateParams(params model.UpsParamsUpdateForm) {
+	u.mu.Lock()
+	u.params.Update(params)
+	u.mu.Unlock()
+}
+
+func (u *Ups) UpdateBatteryParams(bat_id int, batParams model.BatteryParamsUpdateForm) error {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	if l := len(u.params.Batteries); bat_id >= l {
+		return fmt.Errorf("bat_id out of range: %d, expected less %d", bat_id, l)
+	}
+	u.params.Batteries[bat_id].Update(batParams)
+	return nil
+}
+
+func (u *Ups) UpdateAlarms(alarms model.AlarmsUpdateForm) {
+	u.mu.Lock()
+	u.params.Alarms.Update(alarms)
+	u.mu.Unlock()
 }
 
 func (u *Ups) setDefaultUpsParams() {
@@ -281,6 +209,11 @@ func (u *Ups) setDefaultUpsParams() {
 			},
 		},
 	}
+}
+
+func (u *Ups) setState(s chargeState) {
+	log.Printf("\nnew state: %v\n\n", s)
+	u.state = s
 }
 
 func (u *Ups) recalcLoadCurrent() {

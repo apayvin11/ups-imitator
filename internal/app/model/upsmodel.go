@@ -1,12 +1,19 @@
 package model
 
+import (
+	"encoding/binary"
+	"math"
+
+	"github.com/alex11prog/ups-imitator/internal/app/utils"
+)
+
 type BatteryParams struct {
 	Voltage float32 `json:"voltage" example:"12"`
 	Temp    float32 `json:"temp" example:"24"`
 	Resist  float32 `json:"resist" example:"5"`
 }
 
-func (bat *BatteryParams) Update(form *BatteryParamsUpdateForm) {
+func (bat *BatteryParams) Update(form BatteryParamsUpdateForm) {
 	if form.Voltage != nil {
 		bat.Voltage = *form.Voltage
 	}
@@ -30,6 +37,18 @@ type Alarms struct {
 	Overload         bool `json:"overload" example:"false"`
 }
 
+func (a *Alarms) Update(form AlarmsUpdateForm) {
+	if form.UpcInBatteryMode != nil {
+		a.UpcInBatteryMode = *form.UpcInBatteryMode
+	}
+	if form.LowBattery != nil {
+		a.LowBattery = *form.LowBattery
+	}
+	if form.Overload != nil {
+		a.Overload = *form.Overload
+	}
+}
+
 type AlarmsUpdateForm struct {
 	UpcInBatteryMode *bool `json:"upc_in_battery_mode" example:"false"`
 	LowBattery       *bool `json:"low_battery" example:"false"`
@@ -46,10 +65,11 @@ type UpsParams struct {
 	RemainingBatCapacity float32          `json:"remaining_battery_capacity" example:"50"` // Ah
 	SOC                  float32          `json:"soc" example:"100"`                       // state of charge (percent)
 	Batteries            [4]BatteryParams `json:"batteries"`
-	Alarms               Alarms           `json:"alarms"`
+
+	Alarms Alarms `json:"alarms"`
 }
 
-func (ups *UpsParams) UpdateParams(form *UpsParamsUpdateForm) {
+func (ups *UpsParams) Update(form UpsParamsUpdateForm) {
 	if form.InputAcVoltage != nil {
 		ups.InputAcVoltage = *form.InputAcVoltage
 	}
@@ -62,15 +82,6 @@ func (ups *UpsParams) UpdateParams(form *UpsParamsUpdateForm) {
 	if form.BatGroupCurrent != nil {
 		ups.BatGroupCurrent = *form.BatGroupCurrent
 	}
-	if form.Alarms.UpcInBatteryMode != nil {
-		ups.Alarms.UpcInBatteryMode = *form.Alarms.UpcInBatteryMode
-	}
-	if form.Alarms.LowBattery != nil {
-		ups.Alarms.LowBattery = *form.Alarms.LowBattery
-	}
-	if form.Alarms.Overload != nil {
-		ups.Alarms.Overload = *form.Alarms.Overload
-	}
 }
 
 type UpsParamsUpdateForm struct {
@@ -78,5 +89,27 @@ type UpsParamsUpdateForm struct {
 	InputAcCurrent  *float32 `json:"input_ac_current" example:"5"`   // Amp
 	BatGroupVoltage *float32 `json:"bat_group_voltage" example:"48"` // V
 	BatGroupCurrent *float32 `json:"bat_group_current" example:"0"`  // Amp
-	Alarms          AlarmsUpdateForm
+}
+
+func (ups *UpsParams) GetParamBytes() []byte {
+	res := make([]byte, RegBattery4Res*2 +4 )
+	binary.BigEndian.PutUint32(res[RegInputAcVoltage*2:], math.Float32bits(ups.InputAcVoltage))
+	binary.BigEndian.PutUint32(res[RegInputAcCurrent*2:], math.Float32bits(ups.InputAcCurrent))
+	binary.BigEndian.PutUint32(res[RegBatteryGroupVoltage*2:], math.Float32bits(ups.BatGroupVoltage))
+	binary.BigEndian.PutUint32(res[RegBatteryGroupCurrent*2:], math.Float32bits(ups.BatGroupCurrent))
+	for i, battery := range ups.Batteries {
+		start := RegBattery1Voltage * uint16(2) * (uint16(i) + 1)
+		binary.BigEndian.PutUint32(res[start:], math.Float32bits(battery.Voltage))
+		binary.BigEndian.PutUint32(res[start+4:], math.Float32bits(battery.Temp))
+		binary.BigEndian.PutUint32(res[start+8:], math.Float32bits(battery.Resist))
+	}
+	return res
+}
+
+func (ups *UpsParams) GetAlarmBytes() []byte {
+	var alarmsBitwise byte
+	alarmsBitwise |= utils.Bool2byte(ups.Alarms.UpcInBatteryMode)
+	alarmsBitwise |= utils.Bool2byte(ups.Alarms.LowBattery) << 1
+	alarmsBitwise |= utils.Bool2byte(ups.Alarms.Overload) << 2
+	return []byte{alarmsBitwise}
 }

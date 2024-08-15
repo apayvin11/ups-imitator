@@ -1,4 +1,4 @@
-ups_addresses = ["127.0.0.1:1502"]
+ups_addr = "127.0.0.1:1502"
 rest_api_bind_addr = ":8080"
 ups_sync_interval = 30 # sec
 
