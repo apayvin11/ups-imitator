@@ -4,12 +4,11 @@ import (
 	"io"
 	"os"
 
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
-
 	_ "github.com/alex11prog/ups-imitator/docs"
 	"github.com/alex11prog/ups-imitator/internal/app/imitator"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type server struct {
@@ -42,9 +41,10 @@ func (s *server) configureRouter() {
 	subRouter_imitator := s.router.Group("/imitator")
 	subRouter_imitator.GET("/mode", s.handlerGetMode)
 	subRouter_imitator.PUT("/mode", s.handlerUpdateMode)
-	subRouter_imitator.GET("/ups", s.handlerGetAllUps)
-	subRouter_imitator.PATCH("/ups/:ups_id", s.handlerUpdateUps)
-	subRouter_imitator.PATCH("/ups/:ups_id/battery/:bat_id", s.handlerUpdateUpsBattery)
+	subRouter_imitator.GET("/ups", s.handlerGetAllUpsParams)
+ 	subRouter_imitator.PATCH("/ups/params", s.handlerUpdateUpsParams)
+	subRouter_imitator.PATCH("/ups/:bat_id", s.handlerUpdateBattery) 
+	subRouter_imitator.PATCH("/ups/alarms", s.handlerUpdateAlarms) 
 }
 
 func (s *server) errorResponse(c *gin.Context, code int, err error) {

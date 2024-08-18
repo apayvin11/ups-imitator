@@ -1,7 +1,7 @@
 package model
 
 import (
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -9,7 +9,7 @@ import (
 )
 
 type Config struct {
-	UpsAddresses    []string      `toml:"ups_addresses"`
+	UpsAddr         string        `toml:"ups_addr"`
 	RestApiBindAddr string        `toml:"rest_api_bind_addr"`
 	UpsSyncInterval time.Duration `toml:"ups_sync_interval"` // sec
 
@@ -27,7 +27,7 @@ type Config struct {
 func (conf *Config) validate() error {
 	return validation.ValidateStruct(
 		conf,
-		validation.Field(&conf.UpsAddresses, validation.Required),
+		validation.Field(&conf.UpsAddr, validation.Required),
 		validation.Field(&conf.RestApiBindAddr, validation.Required),
 		validation.Field(&conf.UpsSyncInterval, validation.Required, validation.Min(time.Second)),
 		validation.Field(&conf.CycleChangeTimeout, validation.Required, validation.Min(time.Second)),
@@ -41,16 +41,16 @@ func (conf *Config) validate() error {
 	)
 }
 
-func NewConfig(configPath string) *Config {
+func NewConfig(configPath string) (*Config, error){
 	conf := &Config{}
 	_, err := toml.DecodeFile(configPath, conf)
 	if err != nil {
-		log.Fatal("toml decode file config error! ", err)
+		return nil, fmt.Errorf("toml decode file config error: %v", err)
 	}
 	conf.UpsSyncInterval *= time.Second
 	conf.CycleChangeTimeout *= time.Second
 	if err := conf.validate(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	return conf
+	return conf, nil
 }

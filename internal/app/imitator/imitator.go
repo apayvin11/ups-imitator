@@ -1,7 +1,7 @@
 package imitator
 
 import (
-	"fmt"
+	"log"
 	"sync/atomic"
 	"time"
 
@@ -11,33 +11,53 @@ import (
 )
 
 type Imitator struct {
+	client        modbus.Client
 	conf          *model.Config
 	upsSyncTicker *time.Ticker
-	mode          atomic.Bool // true - auto, false manual
-	upsSlice      []*ups.Ups
+	mode          atomic.Bool // true - auto, false - manual
+	ups           *ups.Ups
 }
 
-func New(clients []modbus.Client, conf *model.Config) *Imitator {
+func New(client modbus.Client, conf *model.Config) *Imitator {
 	res := &Imitator{
+		client:        client,
 		conf:          conf,
 		upsSyncTicker: time.NewTicker(conf.UpsSyncInterval),
+		ups:           ups.New(conf),
 	}
 	res.mode.Store(true)
-	res.upsSlice = make([]*ups.Ups, len(clients))
-	for i, client := range clients {
-		res.upsSlice[i] = ups.New(client, conf)
-	}
 	return res
 }
 
+// Start starts working in the background, recalculating and sending parameters to the UPS via Modbus
 func (im *Imitator) Start() {
 	go func() {
 		for range im.upsSyncTicker.C {
-			for _, ups := range im.upsSlice {
-				ups.CountAndSend()
-			}
+			im.recalcAndSendParams()
 		}
 	}()
+}
+
+func (im *Imitator) recalcAndSendParams() {
+	im.ups.RecalculateParams()
+	params := im.ups.GetParamsWithSimulatedMeasErr()
+	paramBytes := params.GetParamBytes()
+	if _, err := im.client.WriteMultipleRegisters(model.RegInputAcVoltage, uint16(len(paramBytes)/2), paramBytes); err != nil {
+		log.Println(err)
+		return
+	}
+	log.Printf("InputAcVoltage: %v\n", params.InputAcVoltage)
+	log.Printf("InputAcCurrent: %v\n", params.InputAcCurrent)
+	log.Printf("BatGroupVoltage: %v\n", params.BatGroupVoltage)
+	log.Printf("BatGroupCurrent: %v\n", params.BatGroupCurrent)
+	log.Printf("LoadCurrent: %v\n", params.LoadCurrent)
+	log.Printf("RemainingBatCapacity: %v\n", params.RemainingBatCapacity)
+	log.Printf("SOC: %v\n\n", params.SOC)
+
+	alarmBytes := params.GetAlarmBytes()
+	if _, err := im.client.WriteMultipleCoils(model.RegAlarmUpcInBatteryMode, model.NumOfAlarm, alarmBytes); err != nil {
+		log.Println(err)
+	}
 }
 
 func (im *Imitator) GetMode() bool {
@@ -48,9 +68,7 @@ func (im *Imitator) SetMode(val bool) {
 	old := im.mode.Swap(val)
 	if old != val {
 		if val {
-			for _, ups := range im.upsSlice {
-				ups.Reset()
-			}
+			im.ups.Reset()
 			im.upsSyncTicker.Reset(im.conf.UpsSyncInterval)
 		} else {
 			im.upsSyncTicker.Stop()
@@ -58,28 +76,18 @@ func (im *Imitator) SetMode(val bool) {
 	}
 }
 
-func (im *Imitator) GetUpsParams() []*model.UpsParams {
-	res := make([]*model.UpsParams, len(im.upsSlice))
-	for i, ups := range im.upsSlice {
-		res[i] = ups.GetParams()
-	}
-	return res
+func (im *Imitator) GetAllUpsParams() model.UpsParams {
+	return im.ups.GetAllParams()
 }
 
-func (im *Imitator) UpdateUps(ups_id int, form *model.UpsParamsUpdateForm) error {
-	if l := len(im.upsSlice); ups_id >= l {
-		return fmt.Errorf("ups_id out of range: %d, expected less %d", ups_id, l)
-	}
-
-	im.upsSlice[ups_id].UpdateParams(form)
-	return nil
+func (im *Imitator) UpdateUpsParams(form model.UpsParamsUpdateForm) {
+	im.ups.UpdateParams(form)
 }
 
-// UpdateUpsBattery updates ups battery
-// ups_id - ups index in slice, bat_id - battery index in battery array
-func (im *Imitator) UpdateUpsBattery(ups_id int, bat_id int, form *model.BatteryParamsUpdateForm) error {
-	if l := len(im.upsSlice); ups_id >= l {
-		return fmt.Errorf("ups_id out of range: %d, expected less %d", ups_id, l)
-	}
-	return im.upsSlice[ups_id].UpdateBatteryParams(bat_id, form)
+func (im *Imitator) UpdateUpsBatteryParams(bat_id int, batParams model.BatteryParamsUpdateForm) error {
+	return im.ups.UpdateBatteryParams(bat_id, batParams)
+}
+
+func (im *Imitator) UpdateAlarms(alarms model.AlarmsUpdateForm) {
+	im.ups.UpdateAlarms(alarms)
 }

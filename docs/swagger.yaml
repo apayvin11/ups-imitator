@@ -10,8 +10,6 @@ definitions:
       mode:
         example: false
         type: boolean
-    required:
-    - mode
     type: object
   apiserver.statusBody:
     properties:
@@ -109,8 +107,6 @@ definitions:
     type: object
   model.UpsParamsUpdateForm:
     properties:
-      alarms:
-        $ref: '#/definitions/model.AlarmsUpdateForm'
       bat_group_current:
         description: Amp
         example: 0
@@ -130,12 +126,12 @@ definitions:
     type: object
 info:
   contact: {}
-  description: REST API для UPS имитатора
-  title: UPS-имитатор - OpenAPI спецификация
+  title: UPS-imitator - OpenAPI specification
   version: v1.0.0
 paths:
   /imitator/mode:
     get:
+      description: true - auto, false - manual
       produces:
       - application/json
       responses:
@@ -177,44 +173,10 @@ paths:
             items:
               $ref: '#/definitions/model.UpsParams'
             type: array
-      summary: method returns all ups
+      summary: method returns all ups params
       tags:
       - Imitator
-  /imitator/ups/{ups_id}:
-    patch:
-      consumes:
-      - application/json
-      parameters:
-      - description: params
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/model.UpsParamsUpdateForm'
-      - description: UPS id
-        in: path
-        name: ups_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/apiserver.statusBody'
-        "400":
-          description: invalid payload
-          schema:
-            $ref: '#/definitions/apiserver.errorResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/apiserver.errorResponse'
-      summary: method updates ups params
-      tags:
-      - Imitator
-  /imitator/ups/{ups_id}/battery/{bat_id}:
+  /imitator/ups/{bat_id}:
     patch:
       consumes:
       - application/json
@@ -225,11 +187,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/model.BatteryParamsUpdateForm'
-      - description: UPS id
-        in: path
-        name: ups_id
-        required: true
-        type: integer
       - description: Battery id
         in: path
         name: bat_id
@@ -246,11 +203,73 @@ paths:
           description: invalid payload
           schema:
             $ref: '#/definitions/apiserver.errorResponse'
+        "403":
+          description: auto mode
+          schema:
+            $ref: '#/definitions/apiserver.errorResponse'
         "422":
           description: Unprocessable Entity
           schema:
             $ref: '#/definitions/apiserver.errorResponse'
       summary: method updates ups battery params
+      tags:
+      - Imitator
+  /imitator/ups/alarms:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: alarms
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.AlarmsUpdateForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiserver.statusBody'
+        "400":
+          description: invalid payload
+          schema:
+            $ref: '#/definitions/apiserver.errorResponse'
+        "403":
+          description: auto mode
+          schema:
+            $ref: '#/definitions/apiserver.errorResponse'
+      summary: method updates ups alarms
+      tags:
+      - Imitator
+  /imitator/ups/params:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: params
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpsParamsUpdateForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiserver.statusBody'
+        "400":
+          description: invalid payload
+          schema:
+            $ref: '#/definitions/apiserver.errorResponse'
+        "403":
+          description: auto mode
+          schema:
+            $ref: '#/definitions/apiserver.errorResponse'
+      summary: method updates ups params
       tags:
       - Imitator
 swagger: "2.0"

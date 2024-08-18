@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/alex11prog/ups-imitator/internal/apiserver"
@@ -10,34 +11,38 @@ import (
 )
 
 const (
-	confPath        = "conf/config.toml"
+	confPath = "conf/config.toml"
 )
 
-//	@title			UPS-имитатор - OpenAPI спецификация
-//	@version		v1.0.0
-//	@description	REST API для UPS имитатора
+//	@title		UPS-imitator - OpenAPI specification
+//	@version	v1.0.0
 
 // host		localhost:8080
-// @BasePath	/
+//
+//	@BasePath	/
 func main() {
-	conf := model.NewConfig(confPath)
-
-	var clients []modbus.Client
-
-	// init tcp modbus clients
-	for _, upsAddr := range conf.UpsAddresses {
-		handler := modbus.NewTCPClientHandler(upsAddr)
-		if err := handler.Connect(); err != nil {
-			log.Fatal(err)
-		}
-		defer handler.Close()
-		clients = append(clients, modbus.NewClient(handler))
+	conf, err := model.NewConfig(confPath)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	imitator := imitator.New(clients, conf)
+	handler := modbus.NewTCPClientHandler(conf.UpsAddr)
+	if err := handler.Connect(); err != nil {
+		log.Fatal(err)
+	}
+	defer handler.Close()
+	client := modbus.NewClient(handler)
+
+	imitator := imitator.New(client, conf)
 	imitator.Start()
+	
+	go func() {
+		if err := apiserver.StartServer(conf.RestApiBindAddr, imitator); err != nil {
+			log.Fatal("apiserver startup error! ", err)
+		}
+	}()
 
-	if err := apiserver.StartServer(conf.RestApiBindAddr, imitator); err != nil {
-		log.Fatal("apiserver.StartServer error! ", err)
-	}
+	fmt.Println("press enter to quit")
+	var s string
+	fmt.Scanln(&s)
 }
