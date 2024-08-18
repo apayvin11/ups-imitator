@@ -125,7 +125,7 @@ func (u *Ups) RecalculateParams() {
 	u.mu.Unlock()
 }
 
-func (u *Ups) GetParams() (params model.UpsParams) {
+func (u *Ups) GetAllParams() (params model.UpsParams) {
 	u.mu.Lock()
 	params = u.params
 	u.mu.Unlock()

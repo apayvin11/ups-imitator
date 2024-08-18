@@ -15,3 +15,8 @@ func SimulateMeasErr(errDev, srcVal float32) float32 {
 	measErrCoef := rand.Float32() * 2 - 1 // from - 1 to 1
 	return srcVal + measErrCoef * (srcVal * errDev)
 }
+
+// NewP returns pointer of value
+func NewP[V any](v V) *V {
+	return &v
+}

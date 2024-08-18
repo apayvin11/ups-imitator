@@ -7,12 +7,22 @@ import (
 
 func TestConfig(t *testing.T) *Config {
 	return &Config{
-		UpsSyncInterval: time.Second,
+		UpsAddr:               "127.0.0.1:1502",
+		RestApiBindAddr:       ":8080",
+		UpsSyncInterval:       time.Second * 30,
+		CycleChangeTimeout:    time.Hour,
+		DefaultInputAcVoltage: 220,
+		MaxBatGroupVoltage:    54,
+		MinBatGroupVoltage:    42,
+		LoadPower:             1000,
+		DefaultBatCapacity:    50,
+		ChargeCurrentLimit:    20,
+		LowSocTriggerAlarm:    0.1,
 	}
 }
 
-func TestUpsParams(t *testing.T) UpsParams {
-	return UpsParams{
+func TestUpsParams(t *testing.T) *UpsParams {
+	return &UpsParams{
 		InputAcVoltage:       220,
 		InputAcCurrent:       5,
 		BatGroupVoltage:      54,

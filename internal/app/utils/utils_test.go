@@ -19,6 +19,6 @@ func Test_SimulateMeasErr(t *testing.T) {
 		src := rand.Float32() * 100
 		res := utils.SimulateMeasErr(0.1, src)
 
-		assert.GreaterOrEqual(t, 0.1, float32(math.Abs(float64((src-res)/src))))
+		assert.GreaterOrEqual(t, 0.1, math.Abs(float64((src-res)/src)))
 	}
 }

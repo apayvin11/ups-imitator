@@ -17,6 +17,7 @@ const docTemplate = `{
     "paths": {
         "/imitator/mode": {
             "get": {
+                "description": "true - auto, false - manual",
                 "produces": [
                     "application/json"
                 ],
@@ -73,7 +74,7 @@ const docTemplate = `{
                 "tags": [
                     "Imitator"
                 ],
-                "summary": "method returns all ups",
+                "summary": "method returns all ups params",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -87,7 +88,46 @@ const docTemplate = `{
                 }
             }
         },
-        "/imitator/ups/{ups_id}": {
+        "/imitator/ups/alarms": {
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Imitator"
+                ],
+                "summary": "method updates ups alarms",
+                "parameters": [
+                    {
+                        "description": "alarms",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AlarmsUpdateForm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.statusBody"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/imitator/ups/params": {
             "patch": {
                 "consumes": [
                     "application/json"
@@ -108,13 +148,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/model.UpsParamsUpdateForm"
                         }
-                    },
-                    {
-                        "type": "integer",
-                        "description": "UPS id",
-                        "name": "ups_id",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -129,17 +162,11 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/apiserver.errorResponse"
                         }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/apiserver.errorResponse"
-                        }
                     }
                 }
             }
         },
-        "/imitator/ups/{ups_id}/battery/{bat_id}": {
+        "/imitator/ups/{bat_id}": {
             "patch": {
                 "consumes": [
                     "application/json"
@@ -160,13 +187,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/model.BatteryParamsUpdateForm"
                         }
-                    },
-                    {
-                        "type": "integer",
-                        "description": "UPS id",
-                        "name": "ups_id",
-                        "in": "path",
-                        "required": true
                     },
                     {
                         "type": "integer",
@@ -210,9 +230,6 @@ const docTemplate = `{
         },
         "apiserver.mode": {
             "type": "object",
-            "required": [
-                "mode"
-            ],
             "properties": {
                 "mode": {
                     "type": "boolean",
@@ -353,9 +370,6 @@ const docTemplate = `{
         "model.UpsParamsUpdateForm": {
             "type": "object",
             "properties": {
-                "alarms": {
-                    "$ref": "#/definitions/model.AlarmsUpdateForm"
-                },
                 "bat_group_current": {
                     "description": "Amp",
                     "type": "number",
@@ -387,8 +401,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "UPS-имитатор - OpenAPI спецификация",
-	Description:      "REST API для UPS имитатора",
+	Title:            "UPS-imitator - OpenAPI specification",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

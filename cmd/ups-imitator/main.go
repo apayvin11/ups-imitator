@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/alex11prog/ups-imitator/internal/apiserver"
 	"github.com/alex11prog/ups-imitator/internal/app/imitator"
 	"github.com/alex11prog/ups-imitator/internal/app/model"
 	"github.com/goburrow/modbus"
@@ -13,11 +14,12 @@ const (
 	confPath = "conf/config.toml"
 )
 
-//	@title			UPS-imitator - OpenAPI specification
-//	@version		v1.0.0
+//	@title		UPS-imitator - OpenAPI specification
+//	@version	v1.0.0
 
 // host		localhost:8080
-// @BasePath	/
+//
+//	@BasePath	/
 func main() {
 	conf, err := model.NewConfig(confPath)
 	if err != nil {
@@ -33,11 +35,13 @@ func main() {
 
 	imitator := imitator.New(client, conf)
 	imitator.Start()
+	
+	go func() {
+		if err := apiserver.StartServer(conf.RestApiBindAddr, imitator); err != nil {
+			log.Fatal("apiserver startup error! ", err)
+		}
+	}()
 
-	/* 	if err := apiserver.StartServer(conf.RestApiBindAddr, imitator); err != nil {
-	   		log.Fatal("apiserver.StartServer error! ", err)
-	   	}
-	*/
 	fmt.Println("press enter to quit")
 	var s string
 	fmt.Scanln(&s)
