@@ -1,6 +1,7 @@
 package apiserver
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -55,11 +56,16 @@ func (s *server) handlerGetAllUpsParams(c *gin.Context) {
 //	@Produce	json
 //	@Success	200	{object}	statusBody
 //	@Failure	400	{object}	errorResponse	"invalid payload"
+//	@Failure	403	{object}	errorResponse	"auto mode"
 //	@Router		/imitator/ups/params [patch]
 func (s *server) handlerUpdateUpsParams(c *gin.Context) {
 	var input model.UpsParamsUpdateForm
 	if err := c.BindJSON(&input); err != nil {
 		s.errorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+	if s.imitator.GetMode() {
+		s.errorResponse(c, http.StatusForbidden, errors.New("auto mode"))
 		return
 	}
 	s.imitator.UpdateUpsParams(input)
@@ -75,6 +81,7 @@ func (s *server) handlerUpdateUpsParams(c *gin.Context) {
 //	@Param		bat_id	path		int	true	"Battery id"
 //	@Success	200		{object}	statusBody
 //	@Failure	400		{object}	errorResponse	"invalid payload"
+//	@Failure	403		{object}	errorResponse	"auto mode"
 //	@Failure	422		{object}	errorResponse
 //	@Router		/imitator/ups/{bat_id} [patch]
 func (s *server) handlerUpdateBattery(c *gin.Context) {
@@ -86,6 +93,10 @@ func (s *server) handlerUpdateBattery(c *gin.Context) {
 	var input model.BatteryParamsUpdateForm
 	if err := c.BindJSON(&input); err != nil {
 		s.errorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+	if s.imitator.GetMode() {
+		s.errorResponse(c, http.StatusForbidden, errors.New("auto mode"))
 		return
 	}
 	if err := s.imitator.UpdateUpsBatteryParams(bat_id, input); err != nil {
@@ -102,11 +113,16 @@ func (s *server) handlerUpdateBattery(c *gin.Context) {
 //	@Produce	json
 //	@Success	200	{object}	statusBody
 //	@Failure	400	{object}	errorResponse	"invalid payload"
+//	@Failure	403	{object}	errorResponse	"auto mode"
 //	@Router		/imitator/ups/alarms [patch]
 func (s *server) handlerUpdateAlarms(c *gin.Context) {
 	var input model.AlarmsUpdateForm
 	if err := c.BindJSON(&input); err != nil {
 		s.errorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+	if s.imitator.GetMode() {
+		s.errorResponse(c, http.StatusForbidden, errors.New("auto mode"))
 		return
 	}
 	s.imitator.UpdateAlarms(input)

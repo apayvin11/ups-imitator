@@ -203,6 +203,10 @@ paths:
           description: invalid payload
           schema:
             $ref: '#/definitions/apiserver.errorResponse'
+        "403":
+          description: auto mode
+          schema:
+            $ref: '#/definitions/apiserver.errorResponse'
         "422":
           description: Unprocessable Entity
           schema:
@@ -232,6 +236,10 @@ paths:
           description: invalid payload
           schema:
             $ref: '#/definitions/apiserver.errorResponse'
+        "403":
+          description: auto mode
+          schema:
+            $ref: '#/definitions/apiserver.errorResponse'
       summary: method updates ups alarms
       tags:
       - Imitator
@@ -255,6 +263,10 @@ paths:
             $ref: '#/definitions/apiserver.statusBody'
         "400":
           description: invalid payload
+          schema:
+            $ref: '#/definitions/apiserver.errorResponse'
+        "403":
+          description: auto mode
           schema:
             $ref: '#/definitions/apiserver.errorResponse'
       summary: method updates ups params

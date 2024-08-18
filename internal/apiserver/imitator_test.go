@@ -96,23 +96,37 @@ func TestServer_handlerUpdateUpsParams(t *testing.T) {
 	s := newServer(imitator)
 	testCases := []struct {
 		name         string
-		payload      interface{}
+		prapare      func()
+		payload      any
 		expectedCode int
 	}{
 		{
 			"invalid payload",
+			nil,
 			"invalid",
 			http.StatusBadRequest,
 		},
 		{
 			"invalid param",
+			nil,
 			map[string]string{
 				"input_ac_voltage": "invalid",
 			},
 			http.StatusBadRequest,
 		},
 		{
+			"invalid, auto mode",
+			nil,
+			map[string]interface{}{
+				"input_ac_voltage": 230,
+			},
+			http.StatusForbidden,
+		},
+		{
 			"valid, InputAcVoltage",
+			func() {
+				imitator.SetMode(false)
+			},
 			map[string]interface{}{
 				"input_ac_voltage": 230,
 			},
@@ -120,6 +134,7 @@ func TestServer_handlerUpdateUpsParams(t *testing.T) {
 		},
 		{
 			"valid, InputAcCurrent",
+			nil,
 			map[string]interface{}{
 				"input_ac_current": 10,
 			},
@@ -127,6 +142,7 @@ func TestServer_handlerUpdateUpsParams(t *testing.T) {
 		},
 		{
 			"valid, BatGroupVoltage",
+			nil,
 			map[string]interface{}{
 				"bat_group_voltage": 55,
 			},
@@ -134,6 +150,7 @@ func TestServer_handlerUpdateUpsParams(t *testing.T) {
 		},
 		{
 			"valid, BatGroupCurrent",
+			nil,
 			map[string]interface{}{
 				"bat_group_current": 20,
 			},
@@ -143,6 +160,9 @@ func TestServer_handlerUpdateUpsParams(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.prapare != nil {
+				tc.prapare()
+			}
 			rec := httptest.NewRecorder()
 			b := &bytes.Buffer{}
 			json.NewEncoder(b).Encode(tc.payload)
@@ -158,18 +178,21 @@ func TestServer_handlerUpdateBattery(t *testing.T) {
 	s := newServer(imitator)
 	testCases := []struct {
 		name         string
+		prapare      func()
 		payload      any
-		batId string
+		batId        string
 		expectedCode int
 	}{
 		{
 			"invalid payload",
+			nil,
 			"invalid",
 			"0",
 			http.StatusBadRequest,
 		},
 		{
 			"invalid bat id",
+			nil,
 			map[string]any{
 				"voltage": 12,
 			},
@@ -178,6 +201,7 @@ func TestServer_handlerUpdateBattery(t *testing.T) {
 		},
 		{
 			"invalid param",
+			nil,
 			map[string]any{
 				"voltage": "invalid",
 			},
@@ -185,15 +209,19 @@ func TestServer_handlerUpdateBattery(t *testing.T) {
 			http.StatusBadRequest,
 		},
 		{
-			"invalid bat id, range over",
-			map[string]any{
+			"invalid, auto mode",
+			nil,
+			map[string]interface{}{
 				"voltage": 12,
 			},
-			"4",
-			http.StatusUnprocessableEntity,
+			"0",
+			http.StatusForbidden,
 		},
- 		{
+		{
 			"valid, voltage",
+			func() {
+				imitator.SetMode(false)
+			},
 			map[string]interface{}{
 				"voltage": 12,
 			},
@@ -201,7 +229,18 @@ func TestServer_handlerUpdateBattery(t *testing.T) {
 			http.StatusOK,
 		},
 		{
+			"invalid bat id, range over",
+			nil,
+			map[string]any{
+				"voltage": 12,
+			},
+			"4",
+			http.StatusUnprocessableEntity,
+		},
+
+		{
 			"valid, voltage",
+			nil,
 			map[string]interface{}{
 				"voltage": 12,
 			},
@@ -210,6 +249,7 @@ func TestServer_handlerUpdateBattery(t *testing.T) {
 		},
 		{
 			"valid, resist",
+			nil,
 			map[string]interface{}{
 				"resist": 6,
 			},
@@ -220,6 +260,9 @@ func TestServer_handlerUpdateBattery(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.prapare != nil {
+				tc.prapare()
+			}
 			rec := httptest.NewRecorder()
 			b := &bytes.Buffer{}
 			json.NewEncoder(b).Encode(tc.payload)
@@ -235,23 +278,37 @@ func TestServer_handlerUpdateAlarms(t *testing.T) {
 	s := newServer(imitator)
 	testCases := []struct {
 		name         string
+		prapare      func()
 		payload      interface{}
 		expectedCode int
 	}{
 		{
 			"invalid payload",
+			nil,
 			"invalid",
 			http.StatusBadRequest,
 		},
 		{
 			"invalid param",
+			nil,
 			map[string]string{
 				"upc_in_battery_mode": "invalid",
 			},
 			http.StatusBadRequest,
 		},
 		{
+			"invalid, auto mode",
+			nil,
+			map[string]interface{}{
+				"upc_in_battery_mode": true,
+			},
+			http.StatusForbidden,
+		},
+		{
 			"valid, UpcInBatteryMode",
+			func() {
+				imitator.SetMode(false)
+			},
 			map[string]interface{}{
 				"upc_in_battery_mode": true,
 			},
@@ -259,6 +316,7 @@ func TestServer_handlerUpdateAlarms(t *testing.T) {
 		},
 		{
 			"valid, LowBattery",
+			nil,
 			map[string]interface{}{
 				"low_battery": true,
 			},
@@ -266,6 +324,7 @@ func TestServer_handlerUpdateAlarms(t *testing.T) {
 		},
 		{
 			"valid, Overload",
+			nil,
 			map[string]interface{}{
 				"overload": true,
 			},
@@ -274,6 +333,9 @@ func TestServer_handlerUpdateAlarms(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.prapare != nil {
+				tc.prapare()
+			}
 			rec := httptest.NewRecorder()
 			b := &bytes.Buffer{}
 			json.NewEncoder(b).Encode(tc.payload)

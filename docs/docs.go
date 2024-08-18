@@ -123,6 +123,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/apiserver.errorResponse"
                         }
+                    },
+                    "403": {
+                        "description": "auto mode",
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.errorResponse"
+                        }
                     }
                 }
             }
@@ -159,6 +165,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "auto mode",
                         "schema": {
                             "$ref": "#/definitions/apiserver.errorResponse"
                         }
@@ -205,6 +217,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/apiserver.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "auto mode",
                         "schema": {
                             "$ref": "#/definitions/apiserver.errorResponse"
                         }
